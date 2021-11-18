@@ -17,18 +17,18 @@ const windSpeed = document.querySelector('.wind-speed');
 
 const microphone = document.querySelector('.microphone');
 
-window.addEventListener('change', () => {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(position => {
-            // console.log(position);
-            long = position.coords.longitude;
-            lat = position.coords.latitude;
-            console.log(long);
-            console.log(lat);
+// window.addEventListener('change', () => {
+//     if (navigator.geolocation) {
+//         navigator.geolocation.getCurrentPosition(position => {
+//             // console.log(position);
+//             long = position.coords.longitude;
+//             lat = position.coords.latitude;
+//             console.log(long);
+//             console.log(lat);
 
-        });
-    }
-});
+//         });
+//     }
+// });
 
 
 searchInput.addEventListener('change', (e) => {
@@ -53,6 +53,7 @@ searchInput.addEventListener('change', (e) => {
 var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition;
 
 const recognition = new SpeechRecognition();
+const synth = window.speechSynthesis;
 
 recognition.lang = 'vi-VI';         // Nhận diện tiếng việt
 recognition.continuous = false;     // Kết quả trả về luôn - results are returned for each recognition, or only a single result.
@@ -84,14 +85,42 @@ const handleVoice = (text) => {
     console.log('text:', text);
 
     const handleText = text.toLowerCase();
-    if ( handleText.includes('thời tiết tại')) {
-        const location = handleText.split('tại')[1].trim();
+    // Hỏi thời tiết tại đâu theo kiểu "thời tiết tại " + tên thành phố
+    if (handleText.includes('thời tiết tại')) {
+        speak('Please wait 3 seconds!')
 
-        console.log('location:', location);
-        searchInput.value = location;
-        const changeEvent = new Event('change');
-        searchInput.dispatchEvent(changeEvent);
+        setTimeout(() => {
+            const location = handleText.split('tại')[1].trim();
+
+            console.log('location:', location);
+            searchInput.value = location;
+            const changeEvent = new Event('change');
+            searchInput.dispatchEvent(changeEvent);
+        }, 3 * 1000);
     }
+    // Không đúng thì
+    else {
+        speak('Try again!');
+    }
+}
+
+const speak = (text) => {
+    if (synth.speaking) {
+        console.log('Busy. Speaking... ');
+        return;
+    }
+
+    const utter = new SpeechSynthesisUtterance(text);
+
+    utter.onend = () => {
+        console.log('SpeechSynthesisUtterance.onend');
+    }
+
+    utter.onerror = (err) => {
+        console.log('SpeechSynthesisUtterance.onerror', err);
+    }
+
+    synth.speak(utter);
 }
 
 
